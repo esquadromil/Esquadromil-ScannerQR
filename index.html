@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Leitor de QR Code</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+    #reader { width: 300px; margin: auto; }
+    ul { list-style: none; padding: 0; }
+    li { background: #f1f1f1; margin: 5px; padding: 8px; border-radius: 5px; }
+    button { margin: 10px; padding: 10px 20px; border: none; background: #4CAF50; color: white; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #45a049; }
+  </style>
+</head>
+<body>
+  <h1>Leitor de QR Code</h1>
+  <div id="reader"></div>
+  <button onclick="startScanner()">Escanear QR Code</button>
+  <button onclick="exportToExcel()">Exportar para Excel</button>
+  <button onclick="clearHistory()">Limpar Histórico</button>
+  <h2>Histórico</h2>
+  <ul id="history"></ul>
+
+  <script>
+    let qrCodes = JSON.parse(localStorage.getItem("qrCodes")) || [];
+    let html5QrCode;
+
+    function startScanner() {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          document.getElementById("reader").innerHTML = "";
+          start();
+        });
+      } else {
+        start();
+      }
+    }
+
+    function start() {
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        qrCodeMessage => {
+          if (!qrCodes.includes(qrCodeMessage)) {
+            qrCodes.push(qrCodeMessage);
+            localStorage.setItem("qrCodes", JSON.stringify(qrCodes));
+            updateHistory();
+          }
+        },
+        errorMessage => {}
+      ).catch(err => console.error(err));
+    }
+
+    function updateHistory() {
+      const list = document.getElementById("history");
+      list.innerHTML = "";
+      qrCodes.forEach(code => {
+        const li = document.createElement("li");
+        li.textContent = code;
+        list.appendChild(li);
+      });
+    }
+
+    function exportToExcel() {
+      const ws = XLSX.utils.aoa_to_sheet([["QR Codes Lidos"], ...qrCodes.map(c => [c])]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "QR Codes");
+      XLSX.writeFile(wb, "qrcodes.xlsx");
+    }
+
+    function clearHistory() {
+      qrCodes = [];
+      localStorage.removeItem("qrCodes");
+      updateHistory();
+    }
+
+    // Atualiza a lista na abertura
+    updateHistory();
+  </script>
+</body>
+</html>
