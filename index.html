@@ -10,11 +10,12 @@
     body { 
       font-family: 'Poppins', sans-serif; 
       margin: 0; 
-      background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+      background: #121212; /* fundo escuro */
       min-height: 100vh; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
+      color: #fff;
     }
 
     header { 
@@ -22,11 +23,11 @@
       align-items: center; 
       padding: 20px; 
       width: 100%; 
-      background: rgba(255,255,255,0.8); 
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      background: #1E1E2F; 
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
     }
     header img { height: 50px; margin-right: 15px; }
-    header h1 { flex: 1; margin: 0; font-size: 22px; font-weight: 600; }
+    header h1 { flex: 1; margin: 0; font-size: 22px; font-weight: 600; color: #fff; }
 
     main {
       flex: 1;
@@ -39,55 +40,57 @@
       padding: 20px;
     }
 
-    #reader-card {
-      background: white;
+    #reader-card, #history-card {
+      background: #1E1E2F;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
       margin-bottom: 20px;
       width: 100%;
       text-align: center;
     }
+
     #reader { width: 100%; max-width: 400px; margin: auto; }
 
     .btn {
       margin: 8px;
       padding: 14px 26px;
       border: none;
-      background: #4CAF50;
+      background: #2E3192; /* azul principal */
       color: white;
       border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
       font-weight: 600;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
       transition: 0.2s;
     }
-    .btn:hover { background: #45a049; transform: scale(1.05); }
-    .btn-danger { background: #e53935; }
-    .btn-danger:hover { background: #d32f2f; }
+    .btn:hover { background: #3F51B5; transform: scale(1.05); }
 
-    #history-card {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 100%;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    #history-card h2 { margin-top: 0; font-size: 20px; font-weight: 600; }
+    .btn-danger { background: #E53935; }
+    .btn-danger:hover { background: #D32F2F; }
+
+    #history-card h2 { margin-top: 0; font-size: 20px; font-weight: 600; color: #fff; }
 
     ul { list-style: none; padding: 0; margin: 0; }
-    li { background: #f9f9f9; margin: 6px 0; padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-    li span { flex: 1; text-align: left; margin-right: 10px; word-break: break-word; }
+    li { 
+      background: #2A2A3B; 
+      margin: 6px 0; 
+      padding: 10px; 
+      border-radius: 6px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.6); 
+    }
+    li span { flex: 1; text-align: left; margin-right: 10px; word-break: break-word; color: #fff; }
     li button { padding: 6px 12px; font-size: 14px; }
   </style>
 </head>
 <body>
   <header>
     <!-- Substitua o src abaixo pelo link da sua logo -->
-    <img src="sua_logo.png" alt="Logo">
+    <img src="logoesquadromil.png" alt="Logo">
     <h1>Leitor de QR Code</h1>
   </header>
 
