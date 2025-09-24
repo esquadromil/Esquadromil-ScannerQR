@@ -11,9 +11,9 @@ header img { width: 200px; }
 header h2 { margin: 10px 0 0 0; font-size: 24px; letter-spacing: 1px; }
 main { flex: 1; width: 100%; max-width: 900px; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 video { border: 3px solid #e01b23; border-radius: 12px; width: 100%; max-width: 500px; margin-bottom: 15px; }
-.buttons, .camera-select { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
-button, select { padding: 10px 20px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; color: #fff; transition: transform 0.1s; }
-button:hover, select:hover { transform: scale(1.05); }
+.buttons { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
+button { padding: 10px 20px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; color: #fff; transition: transform 0.1s; }
+button:hover { transform: scale(1.05); }
 #startBtn { background-color: #e01b23; }
 #stopBtn { background-color: #4b0f7c; }
 #exportBtn { background-color: #6c0a55; }
@@ -21,20 +21,19 @@ button:hover, select:hover { transform: scale(1.05); }
 #history { list-style: none; padding: 0; width: 100%; max-width: 500px; }
 li { background: #1a1735; margin: 5px 0; padding: 12px; border-radius: 8px; word-break: break-word; display: flex; justify-content: space-between; }
 li span { font-weight: bold; }
-@media(max-width:600px){ header h2 { font-size: 20px; } button, select { flex: 1 1 45%; } }
+@media(max-width:600px){ button { flex: 1 1 45%; } }
 </style>
 </head>
 <body>
 
 <header>
-    <img src="logoesquadromil.png" alt="Esquadromil Logo">
+    <img src="logobranca.png" alt="Esquadromil Logo">
     <h2>Scanner de QR Codes</h2>
 </header>
 
 <main>
     <video id="video" playsinline></video>
-    <div class="camera-select">
-        <select id="cameraList"></select>
+    <div class="buttons">
         <button id="startBtn">Iniciar Câmera</button>
         <button id="stopBtn">Parar Câmera</button>
         <button id="exportBtn">Exportar Excel</button>
@@ -43,7 +42,6 @@ li span { font-weight: bold; }
     <ul id="history"></ul>
 </main>
 
-<!-- Bibliotecas ZXing e SheetJS -->
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.18.6/umd/index.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
@@ -53,12 +51,10 @@ const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const exportBtn = document.getElementById('exportBtn');
 const clearBtn = document.getElementById('clearBtn');
-const cameraList = document.getElementById('cameraList');
 const historyEl = document.getElementById('history');
 
 let codeReader = new ZXing.BrowserQRCodeReader();
 let stream;
-let selectedDeviceId;
 
 // Histórico
 let scannedCodes = JSON.parse(localStorage.getItem('scannedCodes') || '[]');
@@ -74,52 +70,26 @@ function updateHistory(){
     localStorage.setItem('scannedCodes', JSON.stringify(scannedCodes));
 }
 
-// Listar câmeras
-async function listCameras(){
-    try {
-        const devices = await codeReader.listVideoInputDevices();
-        cameraList.innerHTML = '';
-        devices.forEach(device => {
-            const option = document.createElement('option');
-            option.value = device.deviceId;
-            option.text = device.label || `Câmera ${cameraList.length+1}`;
-            cameraList.appendChild(option);
-        });
-        // Selecionar traseira automaticamente
-        const rear = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('traseira'));
-        if(rear) cameraList.value = rear.deviceId;
-        else cameraList.selectedIndex = 0;
-        if(devices.length === 0) alert('Nenhuma câmera encontrada.');
-    } catch(e){ alert('Erro ao listar câmeras: ' + e); }
-}
-listCameras();
-
-// Iniciar câmera
+// Iniciar câmera traseira
 startBtn.addEventListener('click', async () => {
     if(stream){
         stream.getTracks().forEach(track => track.stop());
         video.srcObject = null;
     }
-    selectedDeviceId = cameraList.value;
 
-    let constraints;
-    if(selectedDeviceId){
-        constraints = { video: { deviceId: { exact: selectedDeviceId } } };
-    } else {
-        constraints = { video: { facingMode: { ideal: "environment" } } };
-    }
+    const constraints = { video: { facingMode: { exact: "environment" } } }; // força traseira
 
     try {
         stream = await navigator.mediaDevices.getUserMedia(constraints);
     } catch(e) {
-        console.warn('Câmera ideal não encontrada, usando qualquer câmera...', e);
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        alert('Câmera traseira não encontrada neste dispositivo.');
+        return;
     }
 
     video.srcObject = stream;
     video.play();
 
-    codeReader.decodeFromVideoDevice(selectedDeviceId || null, video, (result, err) => {
+    codeReader.decodeFromVideoDevice(null, video, (result, err) => {
         if(result && !scannedCodes.includes(result.text)){
             scannedCodes.push(result.text);
             updateHistory();
