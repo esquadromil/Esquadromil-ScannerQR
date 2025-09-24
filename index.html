@@ -81,29 +81,12 @@ li button { padding: 6px 12px; font-size: 14px; }
 
 /* RESPONSIVO */
 @media (max-width: 600px) {
-  main {
-    padding: 15px;
-  }
-  #reader-card, #history-card {
-    padding: 15px;
-    width: 100%;
-  }
-  #reader {
-    max-width: 100%;
-  }
-  .btn {
-    width: 100%;
-    padding: 12px 0;
-    font-size: 16px;
-  }
-  li {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  li button {
-    width: 100%;
-    margin-top: 6px;
-  }
+  main { padding: 15px; }
+  #reader-card, #history-card { padding: 15px; width: 100%; }
+  #reader { max-width: 100%; }
+  .btn { width: 100%; padding: 12px 0; font-size: 16px; }
+  li { flex-direction: column; align-items: flex-start; }
+  li button { width: 100%; margin-top: 6px; }
 }
 </style>
 </head>
@@ -116,6 +99,7 @@ li button { padding: 6px 12px; font-size: 14px; }
   <div id="reader-card">
     <div id="reader"></div>
     <button class="btn" onclick="start()">Iniciar Scanner</button>
+    <button class="btn btn-danger" onclick="stopScanner()">Parar Scanner</button>
   </div>
   <div id="history-card">
     <h2>Histórico</h2>
@@ -130,19 +114,16 @@ let qrCodes = JSON.parse(localStorage.getItem("qrCodes") || "[]");
 let html5QrCode;
 
 function start() {
-  // Para scanner anterior, se houver
+  // Para scanner anterior, se existir
   if (html5QrCode) {
     html5QrCode.stop().catch(err => console.warn(err));
   }
 
   html5QrCode = new Html5Qrcode("reader");
 
-  // Ajusta QR box dependendo da tela
   const screenWidth = window.innerWidth;
   let qrBoxSize = 250;
-  if(screenWidth <= 600){
-    qrBoxSize = screenWidth * 0.8; // 80% da largura da tela no celular
-  }
+  if (screenWidth <= 600) qrBoxSize = screenWidth * 0.8;
 
   html5QrCode.start(
     { facingMode: "environment" },
@@ -155,7 +136,15 @@ function start() {
       }
     },
     errorMessage => {}
-  ).catch(err => console.error(err));
+  ).catch(err => console.error("Erro ao iniciar scanner:", err));
+}
+
+function stopScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop()
+      .then(() => console.log("Scanner parado"))
+      .catch(err => console.error(err));
+  }
 }
 
 function updateHistory() {
@@ -194,7 +183,7 @@ function clearHistory() {
   updateHistory();
 }
 
-// Atualiza a lista na abertura
+// Atualiza histórico na abertura
 updateHistory();
 </script>
 </body>
