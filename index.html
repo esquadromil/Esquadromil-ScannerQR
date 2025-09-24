@@ -7,14 +7,14 @@
 <style>
 body { font-family: 'Arial', sans-serif; margin: 0; padding: 0; background: #0e0c1e; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 header { text-align: center; padding: 20px; background: linear-gradient(90deg, #4b0f7c, #e01b23); width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
-header img { width: 150px; max-width: 40%; } /* logo menor no celular */
+header img { width: 150px; max-width: 40vw; } /* menor em celular */
 header h2 { margin: 10px 0 0 0; font-size: 24px; letter-spacing: 1px; }
 main { flex: 1; width: 100%; max-width: 900px; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 video { border: 3px solid #e01b23; border-radius: 12px; width: 100%; max-width: 500px; margin-bottom: 15px; }
 .buttons { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
 button { padding: 10px 20px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; color: #fff; transition: transform 0.1s; }
 button:hover { transform: scale(1.05); }
-#startBtn { background-color: #e01b23; } 
+#startBtn { background-color: #e01b23; }
 #stopBtn { background-color: #4b0f7c; }
 #exportBtn { background-color: #6c0a55; }
 #clearBtn { background-color: #aa1f40; }
@@ -60,14 +60,14 @@ let stream;
 let scannedCodes = JSON.parse(localStorage.getItem('scannedCodes') || '[]');
 updateHistory();
 
-// 🔊📳 Função para bip + vibração
+// 🔊📳 Feedback (som + vibração)
 function feedback() {
-    // bip
+    // Som tipo bip
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
 
-    oscillator.type = "square";
+    oscillator.type = "square"; 
     oscillator.frequency.setValueAtTime(1000, ctx.currentTime);
     gainNode.gain.setValueAtTime(1, ctx.currentTime);
 
@@ -75,15 +75,14 @@ function feedback() {
     gainNode.connect(ctx.destination);
 
     oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.2);
+    oscillator.stop(ctx.currentTime + 0.3);
 
-    // vibração (se suportado)
+    // Vibração forte (1 segundo)
     if ("vibrate" in navigator) {
-        navigator.vibrate(200); 
+        navigator.vibrate(1000);
     }
 }
 
-// Atualiza histórico na tela
 function updateHistory(){
     historyEl.innerHTML = '';
     scannedCodes.forEach(code => {
@@ -95,22 +94,19 @@ function updateHistory(){
 }
 
 // Iniciar câmera
-async function startCamera(){
+startBtn.addEventListener('click', async () => {
     if(stream){
         stream.getTracks().forEach(track => track.stop());
         video.srcObject = null;
     }
 
+    const constraints = { video: { facingMode: { exact: "environment" } } }; 
+
     try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
     } catch(e) {
-        try {
-            // fallback se não achar traseira
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        } catch(err) {
-            alert('Nenhuma câmera encontrada neste dispositivo.');
-            return;
-        }
+        alert('Câmera traseira não encontrada neste dispositivo.');
+        return;
     }
 
     video.srcObject = stream;
@@ -120,13 +116,10 @@ async function startCamera(){
         if(result && !scannedCodes.includes(result.text)){
             scannedCodes.push(result.text);
             updateHistory();
-            feedback(); // 🔊📳 toca bip + vibra
+            feedback(); // 🔊📳
         }
     });
-}
-
-// Evento do botão Iniciar
-startBtn.addEventListener('click', startCamera);
+});
 
 // Parar câmera
 stopBtn.addEventListener('click', () => {
@@ -140,7 +133,7 @@ stopBtn.addEventListener('click', () => {
 exportBtn.addEventListener('click', () => {
     if(scannedCodes.length === 0){ alert('Nenhum QR Code escaneado!'); return; }
     
-    const ws_data = [['QR Code']];
+    const ws_data = [['QR Code']]; 
     scannedCodes.forEach(code => ws_data.push([code]));
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     const wb = XLSX.utils.book_new();
