@@ -130,6 +130,11 @@ let qrCodes = JSON.parse(localStorage.getItem("qrCodes") || "[]");
 let html5QrCode;
 
 function start() {
+  // Para scanner anterior, se houver
+  if (html5QrCode) {
+    html5QrCode.stop().catch(err => console.warn(err));
+  }
+
   html5QrCode = new Html5Qrcode("reader");
 
   // Ajusta QR box dependendo da tela
