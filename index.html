@@ -5,23 +5,107 @@
   <title>Leitor de QR Code</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-    #reader { width: 300px; margin: auto; }
-    ul { list-style: none; padding: 0; }
-    li { background: #f1f1f1; margin: 5px; padding: 8px; border-radius: 5px; }
-    button { margin: 10px; padding: 10px 20px; border: none; background: #4CAF50; color: white; border-radius: 5px; cursor: pointer; }
-    button:hover { background: #45a049; }
+    body { 
+      font-family: 'Poppins', sans-serif; 
+      margin: 0; 
+      background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+    }
+
+    header { 
+      display: flex; 
+      align-items: center; 
+      padding: 20px; 
+      width: 100%; 
+      background: rgba(255,255,255,0.8); 
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    header img { height: 50px; margin-right: 15px; }
+    header h1 { flex: 1; margin: 0; font-size: 22px; font-weight: 600; }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 600px;
+      padding: 20px;
+    }
+
+    #reader-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      width: 100%;
+      text-align: center;
+    }
+    #reader { width: 100%; max-width: 400px; margin: auto; }
+
+    .btn {
+      margin: 8px;
+      padding: 14px 26px;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+      transition: 0.2s;
+    }
+    .btn:hover { background: #45a049; transform: scale(1.05); }
+    .btn-danger { background: #e53935; }
+    .btn-danger:hover { background: #d32f2f; }
+
+    #history-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    #history-card h2 { margin-top: 0; font-size: 20px; font-weight: 600; }
+
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { background: #f9f9f9; margin: 6px 0; padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    li span { flex: 1; text-align: left; margin-right: 10px; word-break: break-word; }
+    li button { padding: 6px 12px; font-size: 14px; }
   </style>
 </head>
 <body>
-  <h1>Leitor de QR Code</h1>
-  <div id="reader"></div>
-  <button onclick="startScanner()">Escanear QR Code</button>
-  <button onclick="exportToExcel()">Exportar para Excel</button>
-  <button onclick="clearHistory()">Limpar Histórico</button>
-  <h2>Histórico</h2>
-  <ul id="history"></ul>
+  <header>
+    <!-- Substitua o src abaixo pelo link da sua logo -->
+    <img src="sua_logo.png" alt="Logo">
+    <h1>Leitor de QR Code</h1>
+  </header>
+
+  <main>
+    <div id="reader-card">
+      <div id="reader"></div>
+      <div>
+        <button class="btn" onclick="startScanner()">📷 Escanear QR Code</button>
+        <button class="btn" onclick="exportToExcel()">⬇️ Exportar para Excel</button>
+        <button class="btn btn-danger" onclick="clearHistory()">🗑️ Limpar Histórico</button>
+      </div>
+    </div>
+
+    <div id="history-card">
+      <h2>Histórico</h2>
+      <ul id="history"></ul>
+    </div>
+  </main>
 
   <script>
     let qrCodes = JSON.parse(localStorage.getItem("qrCodes")) || [];
@@ -57,11 +141,24 @@
     function updateHistory() {
       const list = document.getElementById("history");
       list.innerHTML = "";
-      qrCodes.forEach(code => {
+      qrCodes.forEach((code, index) => {
         const li = document.createElement("li");
-        li.textContent = code;
+        const span = document.createElement("span");
+        span.textContent = code;
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remover";
+        removeBtn.className = "btn btn-danger";
+        removeBtn.onclick = () => removeCode(index);
+        li.appendChild(span);
+        li.appendChild(removeBtn);
         list.appendChild(li);
       });
+    }
+
+    function removeCode(index) {
+      qrCodes.splice(index, 1);
+      localStorage.setItem("qrCodes", JSON.stringify(qrCodes));
+      updateHistory();
     }
 
     function exportToExcel() {
