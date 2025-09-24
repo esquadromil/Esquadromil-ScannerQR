@@ -5,102 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scanner Esquadromil</title>
 <style>
-    body {
-        font-family: 'Arial', sans-serif;
-        margin: 0;
-        padding: 0;
-        background: #0e0c1e;
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-height: 100vh;
-    }
-    header {
-        text-align: center;
-        padding: 20px;
-        background: linear-gradient(90deg, #4b0f7c, #e01b23);
-        width: 100%;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-    }
-    header img {
-        width: 200px;
-    }
-    header h2 {
-        margin: 10px 0 0 0;
-        font-size: 24px;
-        letter-spacing: 1px;
-    }
-    main {
-        flex: 1;
-        width: 100%;
-        max-width: 900px;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    video {
-        border: 3px solid #e01b23;
-        border-radius: 12px;
-        width: 100%;
-        max-width: 500px;
-        margin-bottom: 15px;
-    }
-    .buttons {
-        display: flex;
-        gap: 15px;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
-    }
-    button {
-        padding: 10px 20px;
-        font-size: 16px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        color: #fff;
-        transition: transform 0.1s;
-    }
-    button:hover { transform: scale(1.05); }
-    #startBtn { background-color: #e01b23; }
-    #stopBtn { background-color: #4b0f7c; }
-    #exportBtn { background-color: #6c0a55; }
-    #clearBtn { background-color: #aa1f40; }
-    #history {
-        list-style: none;
-        padding: 0;
-        width: 100%;
-        max-width: 500px;
-    }
-    li {
-        background: #1a1735;
-        margin: 5px 0;
-        padding: 12px;
-        border-radius: 8px;
-        word-break: break-word;
-        display: flex;
-        justify-content: space-between;
-    }
-    li span {
-        font-weight: bold;
-    }
-    @media(max-width:600px){
-        header h2 { font-size: 20px; }
-        button { flex: 1 1 45%; }
-    }
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #0e0c1e;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+header {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(90deg, #4b0f7c, #e01b23);
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+header img { width: 200px; }
+header h2 {
+    margin: 10px 0 0 0;
+    font-size: 24px;
+    letter-spacing: 1px;
+}
+main {
+    flex: 1;
+    width: 100%;
+    max-width: 900px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+video {
+    border: 3px solid #e01b23;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 15px;
+}
+.buttons, .camera-select {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+button, select {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.1s;
+}
+button:hover, select:hover { transform: scale(1.05); }
+#startBtn { background-color: #e01b23; }
+#stopBtn { background-color: #4b0f7c; }
+#exportBtn { background-color: #6c0a55; }
+#clearBtn { background-color: #aa1f40; }
+#history {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    max-width: 500px;
+}
+li {
+    background: #1a1735;
+    margin: 5px 0;
+    padding: 12px;
+    border-radius: 8px;
+    word-break: break-word;
+    display: flex;
+    justify-content: space-between;
+}
+li span { font-weight: bold; }
+@media(max-width:600px){
+    header h2 { font-size: 20px; }
+    button, select { flex: 1 1 45%; }
+}
 </style>
 </head>
 <body>
 
 <header>
-    <img src="logobranca.png" alt="Esquadromil Logo">
+    <img src="logoesquadromil.png" alt="Esquadromil Logo">
     <h2>Scanner de QR Codes</h2>
 </header>
 
 <main>
     <video id="video" playsinline></video>
-    <div class="buttons">
+    <div class="camera-select">
+        <select id="cameraList"></select>
         <button id="startBtn">Iniciar Câmera</button>
         <button id="stopBtn">Parar Câmera</button>
         <button id="exportBtn">Exportar CSV</button>
@@ -116,13 +113,14 @@ const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const exportBtn = document.getElementById('exportBtn');
 const clearBtn = document.getElementById('clearBtn');
+const cameraList = document.getElementById('cameraList');
 const historyEl = document.getElementById('history');
 
 let codeReader = new ZXing.BrowserQRCodeReader();
 let stream;
 let selectedDeviceId;
 
-// Carrega histórico do localStorage
+// Histórico
 let scannedCodes = JSON.parse(localStorage.getItem('scannedCodes') || '[]');
 updateHistory();
 
@@ -136,12 +134,30 @@ function updateHistory(){
     localStorage.setItem('scannedCodes', JSON.stringify(scannedCodes));
 }
 
-// Iniciar câmera
-startBtn.addEventListener('click', async () => {
+// Listar câmeras
+async function listCameras(){
     try {
         const devices = await codeReader.listVideoInputDevices();
-        selectedDeviceId = devices[0]?.deviceId;
-        if(!selectedDeviceId) throw 'Nenhuma câmera encontrada.';
+        cameraList.innerHTML = '';
+        devices.forEach(device => {
+            const option = document.createElement('option');
+            option.value = device.deviceId;
+            option.text = device.label || `Câmera ${cameraList.length+1}`;
+            cameraList.appendChild(option);
+        });
+        if(devices.length === 0) alert('Nenhuma câmera encontrada.');
+    } catch(e){ alert('Erro ao listar câmeras: ' + e); }
+}
+listCameras();
+
+// Iniciar câmera
+startBtn.addEventListener('click', async () => {
+    if(stream){
+        stream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+    }
+    selectedDeviceId = cameraList.value;
+    try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
         video.srcObject = stream;
         video.play();
@@ -151,9 +167,7 @@ startBtn.addEventListener('click', async () => {
                 updateHistory();
             }
         });
-    } catch (err){
-        alert('Erro ao acessar a câmera: ' + err);
-    }
+    } catch(e){ alert('Erro ao acessar a câmera: ' + e); }
 });
 
 // Parar câmera
