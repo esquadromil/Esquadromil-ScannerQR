@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qr Scanner Excel</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<style>
+body { 
+  font-family: 'Poppins', sans-serif; 
+  margin: 0; 
+  background: #121212;
+  min-height: 100vh; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  color: #fff;
+}
+header { 
+  display: flex; 
+  align-items: center; 
+  padding: 20px; 
+  width: 100%; 
+  background: #1E1E2F; 
+  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+header img { height: 50px; margin-right: 15px; }
+header h1 { flex: 1; margin: 0; font-size: 22px; font-weight: 600; color: #fff; }
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+}
+#reader-card, #history-card {
+  background: #1E1E2F;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  margin-bottom: 20px;
+  width: 100%;
+  text-align: center;
+}
+#reader { width: 100%; max-width: 400px; margin: auto; }
+.btn {
+  margin: 8px;
+  padding: 14px 26px;
+  border: none;
+  background: #2E3192;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+  transition: 0.2s;
+}
+.btn:hover { background: #3F51B5; transform: scale(1.05); }
+.btn-danger { background: #E53935; }
+.btn-danger:hover { background: #D32F2F; }
+#history-card h2 { margin-top: 0; font-size: 20px; font-weight: 600; color: #fff; }
+ul { list-style: none; padding: 0; margin: 0; }
+li { 
+  background: #2A2A3B; 
+  margin: 6px 0; 
+  padding: 10px; 
+  border-radius: 6px; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  box-shadow: 0 1px 3px rgba(0,0,0,0.6); 
+}
+li span { flex: 1; text-align: left; margin-right: 10px; word-break: break-word; color: #fff; }
+li button { padding: 6px 12px; font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <img src="https://raw.githubusercontent.com/esquadromil/Scanner-Esquadromil/main/logoesquadromil.png" alt="Logo">
+  <h1>QR Scanner Excel</h1>
+</header>
+<main>
+  <div id="reader-card">
+    <div id="reader"></div>
+    <button class="btn" onclick="start()">Iniciar Scanner</button>
+  </div>
+  <div id="history-card">
+    <h2>Histórico</h2>
+    <ul id="history"></ul>
+    <button class="btn btn-danger" onclick="clearHistory()">Limpar Histórico</button>
+    <button class="btn" onclick="exportToExcel()">Exportar Excel</button>
+  </div>
+</main>
+
+<script>
+let qrCodes = JSON.parse(localStorage.getItem("qrCodes") || "[]");
+let html5QrCode;
+
+function start() {
+  html5QrCode = new Html5Qrcode("reader");
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    qrCodeMessage => {
+      if (!qrCodes.includes(qrCodeMessage)) {
+        qrCodes.push(qrCodeMessage);
+        localStorage.setItem("qrCodes", JSON.stringify(qrCodes));
+        updateHistory();
+      }
+    },
+    errorMessage => {}
+  ).catch(err => console.error(err));
+}
+
+function updateHistory() {
+  const list = document.getElementById("history");
+  list.innerHTML = "";
+  qrCodes.forEach((code, index) => {
+    const li = document.createElement("li");
+    const span = document.createElement("span");
+    span.textContent = code;
+    const removeBtn = document.createElement("button");
+    removeBtn.textContent = "Remover";
+    removeBtn.className = "btn btn-danger";
+    removeBtn.onclick = () => removeCode(index);
+    li.appendChild(span);
+    li.appendChild(removeBtn);
+    list.appendChild(li);
+  });
+}
+
+function removeCode(index) {
+  qrCodes.splice(index, 1);
+  localStorage.setItem("qrCodes", JSON.stringify(qrCodes));
+  updateHistory();
+}
+
+function exportToExcel() {
+  const ws = XLSX.utils.aoa_to_sheet([["QR Codes Lidos"], ...qrCodes.map(c => [c])]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "QR Codes");
+  XLSX.writeFile(wb, "qrcodes.xlsx");
+}
+
+function clearHistory() {
+  qrCodes = [];
+  localStorage.removeItem("qrCodes");
+  updateHistory();
+}
+
+// Atualiza a lista na abertura
+updateHistory();
+</script>
+</body>
+</html>
