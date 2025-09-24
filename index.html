@@ -7,14 +7,14 @@
 <style>
 body { font-family: 'Arial', sans-serif; margin: 0; padding: 0; background: #0e0c1e; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
 header { text-align: center; padding: 20px; background: linear-gradient(90deg, #4b0f7c, #e01b23); width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
-header img { width: 200px; }
+header img { width: 150px; max-width: 40%; } /* logo menor no celular */
 header h2 { margin: 10px 0 0 0; font-size: 24px; letter-spacing: 1px; }
 main { flex: 1; width: 100%; max-width: 900px; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 video { border: 3px solid #e01b23; border-radius: 12px; width: 100%; max-width: 500px; margin-bottom: 15px; }
 .buttons { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
 button { padding: 10px 20px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; color: #fff; transition: transform 0.1s; }
 button:hover { transform: scale(1.05); }
-#startBtn { background-color: #e01b23; }
+#startBtn { background-color: #e01b23; display: none; } /* escondido, já inicia sozinho */
 #stopBtn { background-color: #4b0f7c; }
 #exportBtn { background-color: #6c0a55; }
 #clearBtn { background-color: #aa1f40; }
@@ -47,7 +47,6 @@ li span { font-weight: bold; }
 
 <script>
 const video = document.getElementById('video');
-const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const exportBtn = document.getElementById('exportBtn');
 const clearBtn = document.getElementById('clearBtn');
@@ -60,6 +59,24 @@ let stream;
 let scannedCodes = JSON.parse(localStorage.getItem('scannedCodes') || '[]');
 updateHistory();
 
+// 🔊 Função para bip alto
+function playBeep() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(1000, ctx.currentTime);
+    gainNode.gain.setValueAtTime(1, ctx.currentTime);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.2);
+}
+
+// Atualiza histórico na tela
 function updateHistory(){
     historyEl.innerHTML = '';
     scannedCodes.forEach(code => {
@@ -70,20 +87,23 @@ function updateHistory(){
     localStorage.setItem('scannedCodes', JSON.stringify(scannedCodes));
 }
 
-// Iniciar câmera traseira
-startBtn.addEventListener('click', async () => {
+// 🚀 Já inicia a câmera automaticamente
+async function startCamera(){
     if(stream){
         stream.getTracks().forEach(track => track.stop());
         video.srcObject = null;
     }
 
-    const constraints = { video: { facingMode: { exact: "environment" } } }; // força traseira
-
     try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
     } catch(e) {
-        alert('Câmera traseira não encontrada neste dispositivo.');
-        return;
+        try {
+            // fallback se não achar traseira
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        } catch(err) {
+            alert('Nenhuma câmera encontrada neste dispositivo.');
+            return;
+        }
     }
 
     video.srcObject = stream;
@@ -93,9 +113,10 @@ startBtn.addEventListener('click', async () => {
         if(result && !scannedCodes.includes(result.text)){
             scannedCodes.push(result.text);
             updateHistory();
+            playBeep(); // 🔊 toca a cada leitura válida
         }
     });
-});
+}
 
 // Parar câmera
 stopBtn.addEventListener('click', () => {
@@ -109,7 +130,7 @@ stopBtn.addEventListener('click', () => {
 exportBtn.addEventListener('click', () => {
     if(scannedCodes.length === 0){ alert('Nenhum QR Code escaneado!'); return; }
     
-    const ws_data = [['QR Code']]; // cabeçalho
+    const ws_data = [['QR Code']];
     scannedCodes.forEach(code => ws_data.push([code]));
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     const wb = XLSX.utils.book_new();
@@ -124,6 +145,9 @@ clearBtn.addEventListener('click', () => {
         updateHistory();
     }
 });
+
+// 🚀 Chama câmera ao carregar página
+startCamera();
 </script>
 
 </body>
