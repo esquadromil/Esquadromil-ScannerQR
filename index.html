@@ -100,13 +100,16 @@ li span { font-weight: bold; }
         <select id="cameraList"></select>
         <button id="startBtn">Iniciar Câmera</button>
         <button id="stopBtn">Parar Câmera</button>
-        <button id="exportBtn">Exportar CSV</button>
+        <button id="exportBtn">Exportar Excel</button>
         <button id="clearBtn">Limpar Histórico</button>
     </div>
     <ul id="history"></ul>
 </main>
 
+<!-- ZXing e SheetJS -->
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.18.6/umd/index.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
 <script>
 const video = document.getElementById('video');
 const startBtn = document.getElementById('startBtn');
@@ -145,6 +148,10 @@ async function listCameras(){
             option.text = device.label || `Câmera ${cameraList.length+1}`;
             cameraList.appendChild(option);
         });
+        // Selecionar traseira automaticamente
+        const rear = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('traseira'));
+        if(rear) cameraList.value = rear.deviceId;
+        else cameraList.selectedIndex = 0; // fallback
         if(devices.length === 0) alert('Nenhuma câmera encontrada.');
     } catch(e){ alert('Erro ao listar câmeras: ' + e); }
 }
@@ -158,7 +165,11 @@ startBtn.addEventListener('click', async () => {
     }
     selectedDeviceId = cameraList.value;
     try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
+        const constraints = { video: {} };
+        if(selectedDeviceId) constraints.video.deviceId = { exact: selectedDeviceId };
+        else constraints.video.facingMode = { exact: "environment" };
+        
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
         video.play();
         codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result, err) => {
@@ -167,7 +178,9 @@ startBtn.addEventListener('click', async () => {
                 updateHistory();
             }
         });
-    } catch(e){ alert('Erro ao acessar a câmera: ' + e); }
+    } catch(e){ 
+        alert('Erro ao acessar a câmera: ' + e); 
+    }
 });
 
 // Parar câmera
@@ -178,17 +191,21 @@ stopBtn.addEventListener('click', () => {
     }
 });
 
-// Exportar CSV
+// Exportar Excel
 exportBtn.addEventListener('click', () => {
     if(scannedCodes.length === 0){ alert('Nenhum QR Code escaneado!'); return; }
-    let csvContent = "data:text/csv;charset=utf-8,QR Code\n" + scannedCodes.join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "scanned_codes.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    // Criar worksheet
+    const ws_data = [['QR Code']]; // cabeçalho
+    scannedCodes.forEach(code => ws_data.push([code]));
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    
+    // Criar workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Scans');
+    
+    // Baixar arquivo
+    XLSX.writeFile(wb, 'scanned_codes.xlsx');
 });
 
 // Limpar histórico
@@ -202,4 +219,3 @@ clearBtn.addEventListener('click', () => {
 
 </body>
 </html>
-
