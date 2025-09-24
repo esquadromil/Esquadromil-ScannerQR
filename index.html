@@ -14,7 +14,7 @@ video { border: 3px solid #e01b23; border-radius: 12px; width: 100%; max-width: 
 .buttons { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
 button { padding: 10px 20px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; color: #fff; transition: transform 0.1s; }
 button:hover { transform: scale(1.05); }
-#startBtn { background-color: #e01b23; display: none; } /* escondido, já inicia sozinho */
+#startBtn { background-color: #e01b23; } 
 #stopBtn { background-color: #4b0f7c; }
 #exportBtn { background-color: #6c0a55; }
 #clearBtn { background-color: #aa1f40; }
@@ -47,6 +47,7 @@ li span { font-weight: bold; }
 
 <script>
 const video = document.getElementById('video');
+const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const exportBtn = document.getElementById('exportBtn');
 const clearBtn = document.getElementById('clearBtn');
@@ -87,7 +88,7 @@ function updateHistory(){
     localStorage.setItem('scannedCodes', JSON.stringify(scannedCodes));
 }
 
-// 🚀 Já inicia a câmera automaticamente
+// Iniciar câmera
 async function startCamera(){
     if(stream){
         stream.getTracks().forEach(track => track.stop());
@@ -118,6 +119,9 @@ async function startCamera(){
     });
 }
 
+// Evento do botão Iniciar
+startBtn.addEventListener('click', startCamera);
+
 // Parar câmera
 stopBtn.addEventListener('click', () => {
     if(stream){
@@ -145,9 +149,6 @@ clearBtn.addEventListener('click', () => {
         updateHistory();
     }
 });
-
-// 🚀 Chama câmera ao carregar página
-startCamera();
 </script>
 
 </body>
