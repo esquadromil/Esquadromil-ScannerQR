@@ -78,6 +78,33 @@ li {
 }
 li span { flex: 1; text-align: left; margin-right: 10px; word-break: break-word; color: #fff; }
 li button { padding: 6px 12px; font-size: 14px; }
+
+/* RESPONSIVO */
+@media (max-width: 600px) {
+  main {
+    padding: 15px;
+  }
+  #reader-card, #history-card {
+    padding: 15px;
+    width: 100%;
+  }
+  #reader {
+    max-width: 100%;
+  }
+  .btn {
+    width: 100%;
+    padding: 12px 0;
+    font-size: 16px;
+  }
+  li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  li button {
+    width: 100%;
+    margin-top: 6px;
+  }
+}
 </style>
 </head>
 <body>
@@ -104,9 +131,17 @@ let html5QrCode;
 
 function start() {
   html5QrCode = new Html5Qrcode("reader");
+
+  // Ajusta QR box dependendo da tela
+  const screenWidth = window.innerWidth;
+  let qrBoxSize = 250;
+  if(screenWidth <= 600){
+    qrBoxSize = screenWidth * 0.8; // 80% da largura da tela no celular
+  }
+
   html5QrCode.start(
     { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
+    { fps: 10, qrbox: qrBoxSize },
     qrCodeMessage => {
       if (!qrCodes.includes(qrCodeMessage)) {
         qrCodes.push(qrCodeMessage);
